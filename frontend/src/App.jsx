@@ -1,7 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Routes, Route, useNavigate } from 'react-router-dom'
 import ProductCard from './components/ProductCard'
-import Cart from './components/Cart'
 import ProductModal from './components/ProductModal'
 import NotificationBell from './components/NotificationBell'
 import Login from './pages/Login'
@@ -21,6 +20,28 @@ const App = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const { products, loading, error } = useProductsAPI()
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('showRegister') === 'true') {
+      setShowRegister(true)
+    }
+  }, [])
+
+  const handleCatalogueClick = () => {
+    if (!user) {
+      setShowRegister(true)
+      return
+    }
+    navigate('/catalogue')
+  }
+
+  const getRoleBadgeClass = () => {
+    if (!user) return ''
+    if (user.role === 'admin') return 'bg-purple-100 text-purple-700'
+    if (user.role === 'medecin' || user.role === 'doctor') return 'bg-green-100 text-green-700'
+    return 'bg-blue-100 text-blue-700'
+  }
 
   if (loading) {
     return (
@@ -51,32 +72,26 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
-
-      {/* NAVBAR */}
       <nav className="bg-white shadow sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
-          <h1
+          <img
+            src="https://oxymedplus.com/storage/2024/11/OXYMED_PLUS-removebg-preview-1.png"
+            alt="OxymedPlus"
             onClick={() => navigate('/')}
-            className="text-2xl font-bold text-blue-900 cursor-pointer"
-          >
-            Oxymed
-          </h1>
-          <div className="flex items-center gap-4">
+            className="h-10 cursor-pointer"
+          />
+          <div className="flex items-center gap-4 flex-wrap justify-end">
             <button
-              onClick={() => navigate('/catalogue')}
+              onClick={handleCatalogueClick}
               className="text-blue-600 hover:underline text-sm font-semibold"
             >
               Catalogue
             </button>
             {user ? (
               <>
-                <span className="text-gray-600">
+                <span className="text-gray-600 flex items-center gap-2">
                   Bonjour, <strong>{user.prenom}</strong>
-                  <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                    user.role === 'admin' ? 'bg-red-100 text-red-600' :
-                    user.role === 'medecin' ? 'bg-green-100 text-green-600' :
-                    'bg-blue-100 text-blue-600'
-                  }`}>
+                  <span className={`text-xs px-2 py-1 rounded-full ${getRoleBadgeClass()}`}>
                     {user.role}
                   </span>
                 </span>
@@ -137,39 +152,41 @@ const App = () => {
         </div>
       </nav>
 
-      {/* MAIN CONTENT */}
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/catalogue" element={
-          <div className="max-w-6xl mx-auto p-4">
-            <Cart />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-              {products.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  nom={product.nom}
-                  prix={product.prix}
-                  moq={product.moq}
-                  stock={product.stock}
-                  type_affichage={product.type_affichage}
-                  id={product.id}
-                  onDetailsClick={() => setSelectedProduct(product)}
-                />
-              ))}
+        <Route
+          path="/catalogue"
+          element={
+            <div className="max-w-6xl mx-auto p-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                {products.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    nom={product.nom}
+                    prix={product.prix}
+                    moq={product.moq}
+                    stock={product.stock}
+                    image_couverture={product.image_couverture}
+                    type_affichage={product.type_affichage}
+                    id={product.id}
+                    onDetailsClick={() => setSelectedProduct(product)}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        } />
+          }
+        />
         <Route path="/admin" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/my-orders" element={<MyOrders />} />
         <Route path="/waiting-list" element={<WaitingListPage />} />
       </Routes>
 
-      {/* MODALS */}
       <ProductModal
         product={selectedProduct}
         onClose={() => setSelectedProduct(null)}
       />
+
       {showLogin && (
         <Login
           onClose={() => setShowLogin(false)}
@@ -179,6 +196,7 @@ const App = () => {
           }}
         />
       )}
+
       {showRegister && (
         <Register
           onClose={() => setShowRegister(false)}

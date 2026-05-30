@@ -60,7 +60,7 @@ const CheckoutForm = ({ onClose }) => {
     }
 
     const message = buildMessage()
-    window.open(`https://wa.me/21653564981?text=${message}`, '_blank')
+    window.open(`https://wa.me/21640434198?text=${message}`, '_blank')
     setLoading(false)
     onClose()
   }
